@@ -319,6 +319,42 @@ async def _extract_webvtt_urls(subtitles_url: str | None) -> list[str]:
         return []
 
 
+async def _fetch_webvtt_content(webvtt_urls: list[str]) -> list[str]:
+    """Fetch content of WebVTT files from the provided URLs.
+
+    Args:
+        webvtt_urls: A list of URLs to WebVTT subtitle files.
+
+    Returns:
+        A list of WebVTT content strings.
+    """
+    if not webvtt_urls:
+        logger.debug("No WebVTT URLs provided, skipping content fetching")
+        return []
+
+    webvtt_content = []
+    try:
+        logger.debug(f"Fetching content from {len(webvtt_urls)} WebVTT URLs")
+        async with httpx.AsyncClient() as client:
+            for url in webvtt_urls:
+                try:
+                    logger.debug(f"Fetching WebVTT content from {url}")
+                    response = await client.get(url)
+                    response.raise_for_status()
+                    webvtt_content.append(response.text)
+                    logger.debug(f"Successfully fetched WebVTT content from {url}")
+                except httpx.HTTPError as e:
+                    logger.error(f"Error fetching WebVTT content from {url}: {e}")
+                except Exception as e:
+                    logger.error(f"Unexpected error fetching WebVTT from {url}: {e}")
+
+        logger.debug(f"Fetched content from {len(webvtt_content)} WebVTT files")
+        return webvtt_content
+    except Exception as e:
+        logger.error(f"Error in WebVTT content fetching: {e}")
+        return []
+
+
 async def fetch_session_data(url: str) -> WWDCSession:
     """Fetch session data from a WWDC session URL.
 
@@ -342,6 +378,7 @@ async def fetch_session_data(url: str) -> WWDCSession:
     sample_codes = _extract_sample_codes(soup)
     subtitles_url = await _extract_subtitles_url(hls_url)
     webvtt_urls = await _extract_webvtt_urls(subtitles_url)
+    webvtt_content = await _fetch_webvtt_content(webvtt_urls)
 
     return WWDCSession(
         id=session_id,
@@ -356,4 +393,5 @@ async def fetch_session_data(url: str) -> WWDCSession:
         sample_codes=sample_codes,
         subtitles_url=subtitles_url,
         webvtt_urls=webvtt_urls,
+        webvtt_content=webvtt_content,
     )

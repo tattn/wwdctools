@@ -23,6 +23,7 @@ class WWDCSession(BaseModel):
     hls_url: str | None = None  # URL to the cmaf.m3u8 HLS stream
     subtitles_url: str | None = None  # URL to the English subtitles
     webvtt_urls: list[str] = []  # URLs to WebVTT subtitle files
+    webvtt_content: list[str] = []  # Content of WebVTT subtitle files
     transcript_content: str | None = None
     sample_code_url: str | None = None
     sample_codes: list[WWDCSampleCode] = []
