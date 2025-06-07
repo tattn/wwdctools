@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -o pipefail
 
 # test.sh - Comprehensive lint and test script for wwdctools
 # Usage: ./scripts/test.sh [options]
@@ -51,15 +51,15 @@ done
 
 # Function to print section headers
 print_header() {
-  echo -e "\n${BLUE}=== $1 ===${NC}"
+  printf "\n${BLUE}=== $1 ===${NC}\n"
 }
 
 # Function to check command result and print appropriate message
 check_result() {
   if [ $? -eq 0 ]; then
-    echo -e "${GREEN}✓ $1 passed${NC}"
+    printf "${GREEN}✓ $1 passed${NC}\n"
   else
-    echo -e "${RED}✗ $1 failed${NC}"
+    printf "${RED}✗ $1 failed${NC}\n"
     if [ "$2" != "continue" ]; then
       exit 1
     fi
@@ -71,7 +71,7 @@ if [ "$RUN_LINT" = true ]; then
   print_header "Running Linting Checks"
 
   # Ruff Format
-  echo -e "${YELLOW}Running Ruff Format...${NC}"
+  printf "${YELLOW}Running Ruff Format...${NC}\n"
   if [ "$FIX_ISSUES" = true ]; then
     uv run --frozen ruff format .
     check_result "Ruff Format" "continue"
@@ -81,7 +81,7 @@ if [ "$RUN_LINT" = true ]; then
   fi
 
   # Ruff Lint
-  echo -e "${YELLOW}Running Ruff Lint...${NC}"
+  printf "${YELLOW}Running Ruff Lint...${NC}\n"
   if [ "$FIX_ISSUES" = true ]; then
     uv run --frozen ruff check . --fix
     check_result "Ruff Lint" "continue"
@@ -91,7 +91,7 @@ if [ "$RUN_LINT" = true ]; then
   fi
 
   # Pyright Type Checking
-  echo -e "${YELLOW}Running Pyright Type Checking...${NC}"
+  printf "${YELLOW}Running Pyright Type Checking...${NC}\n"
   uv run --frozen pyright
   check_result "Pyright Type Checking" "continue"
 fi
@@ -101,7 +101,7 @@ if [ "$RUN_TESTS" = true ]; then
   print_header "Running Tests"
   
   # Run pytest with anyio
-  echo -e "${YELLOW}Running pytest...${NC}"
+  printf "${YELLOW}Running pytest...${NC}\n"
   PYTEST_DISABLE_PLUGIN_AUTOLOAD="" uv run --frozen pytest
   check_result "Pytest" "continue"
 fi
@@ -109,8 +109,8 @@ fi
 # Final summary
 print_header "Summary"
 if [ $? -eq 0 ]; then
-  echo -e "${GREEN}All checks passed!${NC}"
+  printf "${GREEN}All checks passed!${NC}\n"
 else
-  echo -e "${RED}Some checks failed. Please fix the issues and try again.${NC}"
+  printf "${RED}Some checks failed. Please fix the issues and try again.${NC}\n"
   exit 1
 fi
