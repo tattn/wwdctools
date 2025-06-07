@@ -53,18 +53,21 @@ async def fetch_session_data(url: str) -> WWDCSession:  # noqa: PLR0912, PLR0915
         desc_elem = soup.select_one("p.description")
         description = desc_elem.text.strip() if desc_elem else ""
 
-        # Find video ID
+        # Find video ID and HLS URL
         video_id = None
+        hls_url = None
 
-        # Look for video ID in meta tag (og:video)
+        # Look for video ID and HLS URL in meta tag (og:video)
         og_video_meta = soup.select_one("meta[property='og:video']")
         if og_video_meta and hasattr(og_video_meta, "get"):
-            content = og_video_meta.get("content")  # type: ignore
-            if content and isinstance(content, str):
+            hls_url = og_video_meta.get("content")  # type: ignore
+            if hls_url and isinstance(hls_url, str):
+                logger.debug(f"Found HLS URL: {hls_url}")
+
                 # Extract video ID from content URL
                 # (e.g., "4/8A69C683-3259-454B-9F94-5BBE98999A1B")
                 video_id_match = re.search(
-                    r"/videos/wwdc/\d+/\d+/([^/]+/[^/]+)", content
+                    r"/videos/wwdc/\d+/\d+/([^/]+/[^/]+)", hls_url
                 )
                 if video_id_match:
                     video_id = video_id_match.group(1)
@@ -151,6 +154,7 @@ async def fetch_session_data(url: str) -> WWDCSession:  # noqa: PLR0912, PLR0915
             year=year,
             url=url,
             video_id=video_id,
+            hls_url=hls_url,
             transcript_content=transcript_content,
             sample_code_url=sample_code_url,
             sample_codes=sample_codes,
