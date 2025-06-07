@@ -226,6 +226,56 @@ def _extract_sample_codes(soup: BeautifulSoup) -> list[WWDCSampleCode]:
     return sample_codes
 
 
+async def _extract_subtitles_url(hls_url: str | None) -> str | None:
+    """Extract the English subtitles URL from the HLS manifest.
+
+    Args:
+        hls_url: The URL to the HLS manifest file.
+
+    Returns:
+        The URL to the English subtitles, or None if not available.
+    """
+    if not hls_url:
+        logger.debug("No HLS URL provided, skipping subtitles extraction")
+        return None
+
+    try:
+        logger.debug(f"Fetching HLS manifest from {hls_url}")
+        async with httpx.AsyncClient() as client:
+            response = await client.get(hls_url)
+            response.raise_for_status()
+
+            manifest_content = response.text
+            logger.debug("Parsing HLS manifest for subtitles")
+
+            # Regular expression to find the English subtitles entry
+            # Looking for: #EXT-X-MEDIA:TYPE=SUBTITLES,.*LANGUAGE="en",.*URI="(.+?)"
+            subtitles_pattern = re.compile(
+                r'#EXT-X-MEDIA:.*TYPE=SUBTITLES,.*LANGUAGE="en".*URI="(.+?)"',
+                re.IGNORECASE,
+            )
+
+            match = subtitles_pattern.search(manifest_content)
+            if match:
+                subtitles_uri = match.group(1)
+                logger.debug(f"Found English subtitles URI: {subtitles_uri}")
+
+                # Construct the full URL by joining with the base HLS URL
+                base_url = hls_url.rsplit("/", 1)[0] + "/"
+                full_subtitles_url = urljoin(base_url, subtitles_uri)
+                logger.debug(f"Constructed subtitles URL: {full_subtitles_url}")
+                return full_subtitles_url
+
+            logger.debug("No English subtitles found in the manifest")
+            return None
+    except httpx.HTTPError as e:
+        logger.error(f"Error fetching HLS manifest: {e}")
+        return None
+    except Exception as e:
+        logger.error(f"Error extracting subtitles URL: {e}")
+        return None
+
+
 async def fetch_session_data(url: str) -> WWDCSession:
     """Fetch session data from a WWDC session URL.
 
@@ -247,6 +297,7 @@ async def fetch_session_data(url: str) -> WWDCSession:
     transcript_content = _extract_transcript(soup)
     sample_code_url = _extract_sample_code_url(soup, url)
     sample_codes = _extract_sample_codes(soup)
+    subtitles_url = await _extract_subtitles_url(hls_url)
 
     return WWDCSession(
         id=session_id,
@@ -259,4 +310,5 @@ async def fetch_session_data(url: str) -> WWDCSession:
         transcript_content=transcript_content,
         sample_code_url=sample_code_url,
         sample_codes=sample_codes,
+        subtitles_url=subtitles_url,
     )

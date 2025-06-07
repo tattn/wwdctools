@@ -114,7 +114,29 @@ async def test_fetch_session_data_with_video_id(mock_client_class: Any) -> None:
     """
     mock_response.raise_for_status = MagicMock()
 
-    mock_client.get.return_value = mock_response
+    # Add mock response for HLS manifest request
+    mock_hls_response = MagicMock(spec=Response)
+    mock_hls_response.text = """
+    #EXTM3U
+    #EXT-X-MEDIA:TYPE=SUBTITLES,GROUP-ID="subs",LANGUAGE="en",NAME="English",AUTOSELECT=YES,DEFAULT=YES,URI="subtitles/eng/prog_index.m3u8",FORCED=NO
+    #EXT-X-MEDIA:TYPE=SUBTITLES,GROUP-ID="subs",LANGUAGE="ko",NAME="한국어",AUTOSELECT=YES,DEFAULT=NO,URI="subtitles/kor/prog_index.m3u8",FORCED=NO
+    #EXT-X-MEDIA:TYPE=SUBTITLES,GROUP-ID="subs",LANGUAGE="zh",NAME="简体中文",AUTOSELECT=YES,DEFAULT=NO,URI="subtitles/zho/prog_index.m3u8",FORCED=NO
+    #EXT-X-MEDIA:TYPE=SUBTITLES,GROUP-ID="subs",LANGUAGE="ja",NAME="日本語",AUTOSELECT=YES,DEFAULT=NO,URI="subtitles/jpn/prog_index.m3u8",FORCED=NO
+    """
+    mock_hls_response.raise_for_status = MagicMock()
+
+    # Set up the client to return different responses based on the URL
+    def mock_get_side_effect(url: str):
+        if url == "https://developer.apple.com/videos/play/wwdc2024/10144":
+            return mock_response
+        if (
+            url
+            == "https://devstreaming-cdn.apple.com/videos/wwdc/2024/10144/4/8A69C683-3259-454B-9F94-5BBE98999A1B/cmaf.m3u8"
+        ):
+            return mock_hls_response
+        raise ValueError(f"Unexpected URL: {url}")
+
+    mock_client.get.side_effect = mock_get_side_effect
 
     # Call function
     session = await fetch_session_data(
@@ -141,8 +163,16 @@ async def test_fetch_session_data_with_video_id(mock_client_class: Any) -> None:
         session.sample_code_url
         == "https://developer.apple.com/downloads/sample-code/building-great-apps.zip"
     )
+    assert (
+        session.subtitles_url
+        == "https://devstreaming-cdn.apple.com/videos/wwdc/2024/10144/4/8A69C683-3259-454B-9F94-5BBE98999A1B/subtitles/eng/prog_index.m3u8"
+    )
 
-    # Verify mocks were called correctly
-    mock_client.get.assert_called_once_with(
+    # Verify mocks were called correctly with multiple URLs
+    assert mock_client.get.call_count == 2
+    mock_client.get.assert_any_call(
         "https://developer.apple.com/videos/play/wwdc2024/10144"
+    )
+    mock_client.get.assert_any_call(
+        "https://devstreaming-cdn.apple.com/videos/wwdc/2024/10144/4/8A69C683-3259-454B-9F94-5BBE98999A1B/cmaf.m3u8"
     )
