@@ -319,7 +319,7 @@ async def _extract_webvtt_urls(subtitles_url: str | None) -> list[str]:
         return []
 
 
-async def _fetch_webvtt_content(webvtt_urls: list[str]) -> list[str]:
+async def fetch_webvtt_from_urls(webvtt_urls: list[str]) -> list[str]:
     """Fetch content of WebVTT files from the provided URLs.
 
     Args:

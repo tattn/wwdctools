@@ -16,7 +16,7 @@ def test_simple():
 
 @pytest.mark.anyio
 @patch("wwdctools.session.httpx.AsyncClient")
-async def test_fetch_webvtt_content(mock_client_class: Any) -> None:
+async def test_fetch_webvtt(mock_client_class: Any) -> None:
     """Test retrieving WebVTT content from WebVTT URLs."""
     test_year = 2024
     # Setup mocks
@@ -121,7 +121,7 @@ async def test_fetch_webvtt_content(mock_client_class: Any) -> None:
         assert session.webvtt_urls[i] == expected_url
 
     # Now test fetching WebVTT content
-    content = await session.fetch_webvtt_content()
+    content = await session.fetch_webvtt()
     assert len(content) == 5
     for i in range(5):
         expected_content = (

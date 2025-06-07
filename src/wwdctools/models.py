@@ -1,6 +1,5 @@
 """Data models for WWDC content."""
 
-import httpx
 from pydantic import BaseModel
 
 from .logger import logger
@@ -46,7 +45,7 @@ class WWDCSession(BaseModel):
         base_url = f"https://devstreaming-cdn.apple.com/videos/wwdc/{self.year}/{self.id}/{self.video_id}/downloads"
         return f"{base_url}/wwdc{self.year}-{self.id}_{quality}.mp4?dl=1"
 
-    async def fetch_webvtt_content(self) -> list[str]:
+    async def fetch_webvtt(self) -> list[str]:
         """Fetch WebVTT content from URLs.
 
         This method fetches the WebVTT content if it hasn't been fetched already.
@@ -56,29 +55,20 @@ class WWDCSession(BaseModel):
             A list of WebVTT content strings.
         """
         if not self.webvtt_urls:
+            logger.debug("No WebVTT URLs available")
             return []
 
         # Return cached content if already fetched
         if self.webvtt_content:
+            logger.debug("Returning cached WebVTT content")
             return self.webvtt_content
 
-        async with httpx.AsyncClient() as client:
-            content = []
-            for url in self.webvtt_urls:
-                try:
-                    response = await client.get(url)
-                    response.raise_for_status()
-                    content.append(response.text)
-                    logger.debug(f"Successfully fetched WebVTT content from {url}")
-                except httpx.HTTPError as e:
-                    logger.error(f"Error fetching WebVTT content from {url}: {e}")
-                    content.append("")  # Add empty string for failed requests
-                except Exception as e:
-                    logger.error(f"Unexpected error fetching WebVTT from {url}: {e}")
-                    content.append("")
+        # Import here to avoid circular dependency
+        from .session import fetch_webvtt_from_urls
 
-            self.webvtt_content = content
-            return content
+        # Fetch content from URLs
+        self.webvtt_content = await fetch_webvtt_from_urls(self.webvtt_urls)
+        return self.webvtt_content
 
 
 class WWDCTranscript(BaseModel):
