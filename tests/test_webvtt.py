@@ -80,7 +80,7 @@ async def test_fetch_webvtt_content(mock_client_class: Any) -> None:
         mock_webvtt_responses.append(mock_webvtt)
 
     # Set up the client to return different responses based on the URL
-    def mock_get_side_effect(url: str):
+    def mock_get_side_effect(url: str) -> Response:
         if url == f"https://developer.apple.com/videos/play/wwdc{test_year}/10144":
             return mock_response
         if (
@@ -109,31 +109,33 @@ async def test_fetch_webvtt_content(mock_client_class: Any) -> None:
         f"https://developer.apple.com/videos/play/wwdc{test_year}/10144"
     )
 
-    # Verify results
+    # Verify session data before fetching content
     assert session.id == "10144"
     assert session.title == "Building Great Apps"
     assert session.year == test_year
 
-    # Verify WebVTT URLs
+    # Verify URLs are correctly extracted
     assert len(session.webvtt_urls) == 5
     for i in range(5):
-        assert (
-            session.webvtt_urls[i]
-            == f"https://devstreaming-cdn.apple.com/videos/wwdc/{test_year}/10144/4/8A69C683-3259-454B-9F94-5BBE98999A1B/subtitles/eng/sequence_{i}.webvtt"
-        )
+        expected_url = f"https://devstreaming-cdn.apple.com/videos/wwdc/{test_year}/10144/4/8A69C683-3259-454B-9F94-5BBE98999A1B/subtitles/eng/sequence_{i}.webvtt"
+        assert session.webvtt_urls[i] == expected_url
 
-    # Verify WebVTT content
-    assert len(session.webvtt_content) == 5
+    # Now test fetching WebVTT content
+    content = await session.fetch_webvtt_content()
+    assert len(content) == 5
     for i in range(5):
-        assert (
-            session.webvtt_content[i]
-            == f"WEBVTT\n\n00:00:0{i}.000 --> 00:00:0{i + 1}.000\nSubtitle {i}"
+        expected_content = (
+            f"WEBVTT\n\n00:00:0{i}.000 --> 00:00:0{i + 1}.000\nSubtitle {i}"
         )
+        assert content[i] == expected_content
+        assert session.webvtt_content[i] == expected_content
 
     # Verify mocks were called correctly
     assert (
         mock_client.get.call_count == 8
     )  # Main page + HLS + subtitles manifest + 5 WebVTT files
+
+    # Verify API calls
     mock_client.get.assert_any_call(
         f"https://developer.apple.com/videos/play/wwdc{test_year}/10144"
     )

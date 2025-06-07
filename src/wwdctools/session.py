@@ -378,7 +378,6 @@ async def fetch_session_data(url: str) -> WWDCSession:
     sample_codes = _extract_sample_codes(soup)
     subtitles_url = await _extract_subtitles_url(hls_url)
     webvtt_urls = await _extract_webvtt_urls(subtitles_url)
-    webvtt_content = await _fetch_webvtt_content(webvtt_urls)
 
     return WWDCSession(
         id=session_id,
@@ -393,5 +392,5 @@ async def fetch_session_data(url: str) -> WWDCSession:
         sample_codes=sample_codes,
         subtitles_url=subtitles_url,
         webvtt_urls=webvtt_urls,
-        webvtt_content=webvtt_content,
+        webvtt_content=[],
     )
