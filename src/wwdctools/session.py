@@ -276,6 +276,49 @@ async def _extract_subtitles_url(hls_url: str | None) -> str | None:
         return None
 
 
+async def _extract_webvtt_urls(subtitles_url: str | None) -> list[str]:
+    """Extract WebVTT URLs from the subtitles manifest.
+
+    Args:
+        subtitles_url: The URL to the subtitles manifest file.
+
+    Returns:
+        A list of URLs to WebVTT subtitle files.
+    """
+    if not subtitles_url:
+        logger.debug("No subtitles URL provided, skipping WebVTT extraction")
+        return []
+
+    try:
+        logger.debug(f"Fetching subtitles manifest from {subtitles_url}")
+        async with httpx.AsyncClient() as client:
+            response = await client.get(subtitles_url)
+            response.raise_for_status()
+
+            manifest_content = response.text
+            logger.debug("Parsing subtitles manifest for WebVTT URLs")
+
+            # Regular expression to find the WebVTT segment entries in m3u8 playlist
+            # Looking for lines that don't start with # and end with .webvtt
+            webvtt_pattern = re.compile(r"^(?!#).*\.webvtt$", re.MULTILINE)
+
+            matches = webvtt_pattern.findall(manifest_content)
+            if matches:
+                base_url = subtitles_url.rsplit("/", 1)[0] + "/"
+                webvtt_urls = [urljoin(base_url, uri) for uri in matches]
+                logger.debug(f"Found {len(webvtt_urls)} WebVTT URLs")
+                return webvtt_urls
+
+            logger.debug("No WebVTT URLs found in the subtitles manifest")
+            return []
+    except httpx.HTTPError as e:
+        logger.error(f"Error fetching subtitles manifest: {e}")
+        return []
+    except Exception as e:
+        logger.error(f"Error extracting WebVTT URLs: {e}")
+        return []
+
+
 async def fetch_session_data(url: str) -> WWDCSession:
     """Fetch session data from a WWDC session URL.
 
@@ -298,6 +341,7 @@ async def fetch_session_data(url: str) -> WWDCSession:
     sample_code_url = _extract_sample_code_url(soup, url)
     sample_codes = _extract_sample_codes(soup)
     subtitles_url = await _extract_subtitles_url(hls_url)
+    webvtt_urls = await _extract_webvtt_urls(subtitles_url)
 
     return WWDCSession(
         id=session_id,
@@ -311,4 +355,5 @@ async def fetch_session_data(url: str) -> WWDCSession:
         sample_code_url=sample_code_url,
         sample_codes=sample_codes,
         subtitles_url=subtitles_url,
+        webvtt_urls=webvtt_urls,
     )
