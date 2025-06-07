@@ -12,13 +12,11 @@ from rich.console import Console
 from rich.logging import RichHandler
 from rich.panel import Panel
 
+from .logger import logger
 from wwdctools.downloader import download_session_content
 from wwdctools.session import WWDCSession, fetch_session_data
 
 console = Console()
-
-# Configure logger
-logger = logging.getLogger("wwdctools")
 
 
 def configure_logging(verbose: bool) -> None:
