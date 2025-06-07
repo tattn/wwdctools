@@ -15,10 +15,9 @@ from rich.panel import Panel
 from wwdctools.downloader import download_session_content
 from wwdctools.session import WWDCSession, fetch_session_data
 
-console = Console()
+from .logger import logger
 
-# Configure logger
-logger = logging.getLogger("wwdctools")
+console = Console()
 
 
 def configure_logging(verbose: bool) -> None:
