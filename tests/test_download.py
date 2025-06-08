@@ -52,10 +52,16 @@ async def test_download_session_content_video_only():
             # Verify results
             assert "video" in result
             assert os.path.exists(result["video"])
-            assert result["video"].endswith(".mp4")
+            assert result["video"].endswith("_hd.mp4")  # Default quality is "hd"
+
+            # Test with SD quality
+            result_sd = await download_session_content(session, str(output_dir), "sd")
+            assert "video" in result_sd
+            assert os.path.exists(result_sd["video"])
+            assert result_sd["video"].endswith("_sd.mp4")
 
             # Verify mocks were called correctly
-            mock_client.get.assert_called_once()
+            assert mock_client.get.call_count == 2
 
         finally:
             # Clean up test files

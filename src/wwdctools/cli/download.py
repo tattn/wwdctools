@@ -18,9 +18,21 @@ from .utils import console, handle_command_errors, logger, print_panel
     type=click.Path(file_okay=False),
     help="Directory to save downloaded content.",
 )
+@click.option(
+    "--quality",
+    "-q",
+    type=click.Choice(["hd", "sd"]),
+    default="hd",
+    help="Video quality. Either 'hd' or 'sd'. Defaults to 'hd'.",
+)
 @click.pass_context
 @handle_command_errors
-def download(ctx: click.Context, url: str, output: str | None = None) -> None:  # noqa: ARG001
+def download(
+    ctx: click.Context,  # noqa: ARG001
+    url: str,
+    output: str | None = None,
+    quality: str = "hd",
+) -> None:
     """Download video, transcript, and sample code from a WWDC session URL.
 
     URL: The URL of the WWDC session page.
@@ -40,7 +52,7 @@ def download(ctx: click.Context, url: str, output: str | None = None) -> None:  
 
     # Download content
     console.print(f"Downloading content for [bold]{session.title}[/bold]...")
-    downloads = asyncio.run(download_session_content(session, output))
+    downloads = asyncio.run(download_session_content(session, output, quality))
 
     # Display results
     console.print("\n[bold green]Download Summary:[/bold green]")

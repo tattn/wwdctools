@@ -9,13 +9,14 @@ from .models import WWDCSession
 
 
 async def download_session_content(  # noqa: PLR0915
-    session: WWDCSession, output_dir: str | None = None
+    session: WWDCSession, output_dir: str | None = None, quality: str = "hd"
 ) -> dict[str, str]:
     """Download content (video, transcript, sample code) from a WWDC session.
 
     Args:
         session: The WWDCSession object containing content links.
         output_dir: Directory to save downloaded content. Defaults to current directory.
+        quality: The video quality. Either "hd" or "sd". Defaults to "hd".
 
     Returns:
         A dictionary mapping content types to their local file paths.
@@ -35,13 +36,14 @@ async def download_session_content(  # noqa: PLR0915
     downloaded_files: dict[str, str] = {}
 
     # Check if video ID is available and generate video URL
-    video_url = session.generate_video_url()
+    video_url = session.generate_video_url(quality)
 
     # Download video if available
     if video_url:
         # Generate filename from session data
         filename = (
-            f"wwdc{session.year}_{session.id}_{session.title.replace(' ', '_')}.mp4"
+            f"wwdc{session.year}_{session.id}_{session.title.replace(' ', '_')}"
+            f"_{quality}.mp4"
         )
         filepath = os.path.join(output_dir, filename)
 
