@@ -29,12 +29,13 @@ async def _download_video(
     if not video_url:
         return None
 
-    # Generate filename from session data
-    filename = (
-        f"wwdc{session.year}_{session.id}_{session.title.replace(' ', '_')}"
-        f"_{quality}.mp4"
-    )
-    filepath = os.path.join(output_dir, filename)
+    # Create session directory
+    session_dir = os.path.join(output_dir, f"wwdc_{session.year}_{session.id}")
+    os.makedirs(session_dir, exist_ok=True)
+
+    # Generate filename from quality
+    filename = f"{quality}.mp4"
+    filepath = os.path.join(session_dir, filename)
 
     # Check if file already exists
     if skip_existing and os.path.exists(filepath):
@@ -80,11 +81,13 @@ def _save_transcript(
     if not session.transcript_content:
         return None
 
-    filename = (
-        f"wwdc{session.year}_{session.id}_{session.title.replace(' ', '_')}"
-        "_transcript.txt"
-    )
-    filepath = os.path.join(output_dir, filename)
+    # Create session directory
+    session_dir = os.path.join(output_dir, f"wwdc_{session.year}_{session.id}")
+    os.makedirs(session_dir, exist_ok=True)
+
+    # Generate filename
+    filename = "transcript.txt"
+    filepath = os.path.join(session_dir, filename)
 
     # Check if file already exists
     if os.path.exists(filepath):
@@ -115,11 +118,12 @@ async def _download_webvtt(
     if not session.webvtt_urls:
         return None
 
+    # Create session directory
+    session_dir = os.path.join(output_dir, f"wwdc_{session.year}_{session.id}")
+    os.makedirs(session_dir, exist_ok=True)
+
     # Create a directory for WebVTT files
-    webvtt_dir = os.path.join(
-        output_dir,
-        f"wwdc{session.year}_{session.id}_{session.title.replace(' ', '_')}_webvtt",
-    )
+    webvtt_dir = os.path.join(session_dir, "webvtt")
 
     # Check if WebVTT directory exists and has expected files
     if os.path.exists(webvtt_dir):
@@ -169,9 +173,12 @@ async def _download_sample_code(
     if not session.sample_code_url:
         return None
 
+    # Create session directory
+    session_dir = os.path.join(output_dir, f"wwdc_{session.year}_{session.id}")
+    os.makedirs(session_dir, exist_ok=True)
+
     # Extract filename from URL or generate one
-    sample_filename = session.sample_code_url.split("/")[-1]
-    filepath = os.path.join(output_dir, sample_filename)
+    filepath = os.path.join(session_dir, "sample_code.zip")
 
     logger.info(f"Downloading sample code from {session.sample_code_url}")
     async with httpx.AsyncClient() as client:
@@ -202,12 +209,13 @@ def _save_code_samples(
     if not session.sample_codes:
         return None
 
+    # Create session directory
+    session_dir = os.path.join(output_dir, f"wwdc_{session.year}_{session.id}")
+    os.makedirs(session_dir, exist_ok=True)
+
     # Create a filename for the code samples
-    filename = (
-        f"wwdc{session.year}_{session.id}_{session.title.replace(' ', '_')}"
-        "_code_samples.txt"
-    )
-    filepath = os.path.join(output_dir, filename)
+    filename = "sample_code.txt"
+    filepath = os.path.join(session_dir, filename)
 
     logger.info(f"Extracting {len(session.sample_codes)} code samples")
 

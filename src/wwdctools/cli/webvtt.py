@@ -86,13 +86,9 @@ def _save_webvtt_files(
     if os.path.isdir(output) or not combine:
         # When not combining or output is a directory, create a subdirectory
         if os.path.isdir(output):
-            webvtt_dir = os.path.join(
-                output,
-                (
-                    f"wwdc{session.year}_{session.id}_"
-                    f"{session.title.replace(' ', '_')}_webvtt"
-                ),
-            )
+            session_dir = os.path.join(output, f"wwdc_{session.year}_{session.id}")
+            os.makedirs(session_dir, exist_ok=True)
+            webvtt_dir = os.path.join(session_dir, "webvtt")
         else:
             webvtt_dir = output
 

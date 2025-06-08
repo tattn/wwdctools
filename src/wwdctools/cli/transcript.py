@@ -91,11 +91,19 @@ def transcript(  # noqa: PLR0912, PLR0915
             if output and not combine:
                 # Save individual transcript
                 if os.path.isdir(output):
-                    # Use session ID and title for filename
-                    filename = (
-                        f"{session.id}_{session.title.replace(' ', '_')}.{format}"
+                    # Create session directory
+                    session_dir = os.path.join(
+                        output, f"wwdc_{session.year}_{session.id}"
                     )
-                    filepath = os.path.join(output, filename)
+                    os.makedirs(session_dir, exist_ok=True)
+
+                    # Generate filename based on format
+                    if format == "md":
+                        filename = f"{session.title.replace(' ', '_')}.md"
+                    else:
+                        filename = f"transcript.{format}"
+
+                    filepath = os.path.join(session_dir, filename)
                     logger.debug(f"Using directory path: {output}")
                 else:
                     filepath = output
