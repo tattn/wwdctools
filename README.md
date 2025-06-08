@@ -6,6 +6,7 @@ A tool for fetching videos, transcripts, and sample code from Apple's WWDC sessi
 
 - Download videos from WWDC session pages (HD/SD quality available)
 - Extract transcripts from WWDC sessions (supports txt/md/json formats)
+- Download WebVTT subtitle files for video content
 - Download sample code files and inline code snippets
 - Extract code samples with timestamps and titles
 - Support for latest WWDC content
@@ -55,6 +56,7 @@ async def download_wwdc():
     transcript_path = downloads.get("transcript")
     sample_code_path = downloads.get("sample_code")
     code_samples_dir = downloads.get("code_samples")
+    webvtt_dir = downloads.get("webvtt")
 
 # Run the async function
 asyncio.run(download_wwdc())
@@ -148,6 +150,42 @@ async def extract_code():
 
 # Run the async function
 asyncio.run(extract_code())
+```
+
+### Working with WebVTT Subtitles
+
+You can download WebVTT subtitle files from WWDC session pages:
+
+```bash
+# Display WebVTT information in terminal
+wwdctools webvtt https://developer.apple.com/videos/play/wwdc2024/10144
+
+# Save WebVTT files to a directory
+wwdctools webvtt https://developer.apple.com/videos/play/wwdc2024/10144 --output subtitles/
+
+# Combine all WebVTT files into a single file
+wwdctools webvtt https://developer.apple.com/videos/play/wwdc2024/10144 --output combined.webvtt --combine
+```
+
+#### Using Python API
+
+```python
+import asyncio
+from wwdctools import fetch_session_data
+
+async def get_webvtt():
+    # Fetch session data
+    session = await fetch_session_data("https://developer.apple.com/videos/play/wwdc2024/10144")
+
+    # Fetch WebVTT content
+    webvtt_content = await session.fetch_webvtt()
+
+    # Process WebVTT content
+    for i, content in enumerate(webvtt_content):
+        print(f"WebVTT sequence {i}:\n{content[:100]}...")  # Print first 100 chars
+
+# Run the async function
+asyncio.run(get_webvtt())
 ```
 
 ## Development

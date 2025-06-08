@@ -81,6 +81,31 @@ async def download_session_content(  # noqa: PLR0915
         logger.info(f"Transcript saved to {filepath}")
         downloaded_files["transcript"] = filepath
 
+    # Download WebVTT subtitles if available
+    if session.webvtt_urls:
+        # Create a directory for WebVTT files
+        webvtt_dir = os.path.join(
+            output_dir,
+            f"wwdc{session.year}_{session.id}_{session.title.replace(' ', '_')}_webvtt",
+        )
+        os.makedirs(webvtt_dir, exist_ok=True)
+
+        logger.info(f"Downloading {len(session.webvtt_urls)} WebVTT subtitle files")
+
+        # Fetch WebVTT content if not already fetched
+        webvtt_content = await session.fetch_webvtt()
+
+        # Save each WebVTT file
+        for i, content in enumerate(webvtt_content):
+            filename = f"sequence_{i}.webvtt"
+            filepath = os.path.join(webvtt_dir, filename)
+
+            with open(filepath, "w", encoding="utf-8") as f:
+                f.write(content)
+
+        logger.info(f"WebVTT files saved to {webvtt_dir}")
+        downloaded_files["webvtt"] = webvtt_dir
+
     # Download sample code if available
     if session.sample_code_url:
         # Extract filename from URL or generate one
