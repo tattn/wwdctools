@@ -24,6 +24,7 @@ NC='\033[0m' # No Color
 RUN_LINT=true
 RUN_TESTS=true
 FIX_ISSUES=false
+HAS_FAILURES=false
 
 # Process command line arguments
 for arg in "$@"; do
@@ -56,10 +57,12 @@ print_header() {
 
 # Function to check command result and print appropriate message
 check_result() {
-  if [ $? -eq 0 ]; then
+  local exit_code=$?
+  if [ $exit_code -eq 0 ]; then
     printf "${GREEN}✓ $1 passed${NC}\n"
   else
     printf "${RED}✗ $1 failed${NC}\n"
+    HAS_FAILURES=true
     if [ "$2" != "continue" ]; then
       exit 1
     fi
@@ -69,8 +72,19 @@ check_result() {
 # Check if uv is installed
 if ! command -v uv &> /dev/null; then
     printf "${YELLOW}uv is not installed. Installing...${NC}\n"
-    curl -LsSf https://astral.sh/uv/install.sh | sh
+    curl -LsSf https://astral.sh/uv/install.sh | sh && source "$HOME/.local/bin/env"
     check_result "uv installation"
+fi
+
+# Sync dependencies with uv
+print_header "Syncing dependencies with uv"
+uv sync --extra dev
+check_result "uv sync --extra dev" "continue"
+
+# Activate virtual environment if it exists
+if [ -f ".venv/bin/activate" ]; then
+    # shellcheck disable=SC1091
+    source .venv/bin/activate
 fi
 
 # Run linting checks
@@ -115,9 +129,9 @@ fi
 
 # Final summary
 print_header "Summary"
-if [ $? -eq 0 ]; then
-  printf "${GREEN}All checks passed!${NC}\n"
-else
+if [ "$HAS_FAILURES" = true ]; then
   printf "${RED}Some checks failed. Please fix the issues and try again.${NC}\n"
   exit 1
+else
+  printf "${GREEN}All checks passed!${NC}\n"
 fi
