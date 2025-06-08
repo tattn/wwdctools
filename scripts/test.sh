@@ -66,6 +66,13 @@ check_result() {
   fi
 }
 
+# Check if uv is installed
+if ! command -v uv &> /dev/null; then
+    printf "${YELLOW}uv is not installed. Installing...${NC}\n"
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+    check_result "uv installation"
+fi
+
 # Run linting checks
 if [ "$RUN_LINT" = true ]; then
   print_header "Running Linting Checks"
