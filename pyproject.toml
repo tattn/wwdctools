@@ -27,6 +27,8 @@ dependencies = [
 "Bug Tracker" = "https://github.com/tattn/wwdctools/issues"
 
 [project.optional-dependencies]
+cli = []
+
 dev = [
     "pytest>=8.4.0",
     "pytest-asyncio>=1.0.0",
