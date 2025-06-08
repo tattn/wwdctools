@@ -1,102 +1,85 @@
 # wwdctools
 
-A tool for fetching videos, transcripts, and sample code from Apple's WWDC session pages.
+Unlock the full potential of WWDC content with `wwdctools`! Download videos, transcripts, sample code, and subtitles from Apple's WWDC sessions seamlessly. Whether you're a developer, researcher, or simply keen to learn, `wwdctools` provides the tools you need to access and manage WWDC content with ease, through a powerful Command Line Interface (CLI) and a flexible Python API.
 
-## Features
+## Key features
 
-- Download videos from WWDC session pages (HD/SD quality available)
-- Extract transcripts from WWDC sessions (supports txt/md/json formats)
-- Download WebVTT subtitle files for video content
-- Download sample code files and inline code snippets
-- Extract code samples with timestamps and titles
-- Support for latest WWDC content
-- Command line interface (CLI) and Python API
+- **Download complete session content**: Get videos, transcripts, and code with a single command.
+- **Fetch detailed transcripts**: Obtain session transcripts in various formats (TXT, Markdown, JSON).
+- **Extract all code samples**: Access inline snippets and downloadable sample code files.
+- **Retrieve WebVTT subtitles**: Download subtitle files for session videos.
+- **Latest WWDC content**: Always updated to support the newest sessions.
+- **Dual interface**: Use it as a CLI tool or integrate it as a Python library.
+
+## Quick start
+
+You can use `wwdctools` via its CLI or as a Python library. Here’s how to quickly download all content for a single session:
+
+**CLI example:**
+```bash
+wwdctools download <session_url> --output downloads/
+```
+
+**Python API example:**
+```python
+import asyncio
+from wwdctools import fetch_session_data, download_session_content
+
+async def main():
+    session_url = "https://developer.apple.com/videos/play/wwdc2024/10144"  # Example URL
+    session = await fetch_session_data(session_url)
+    downloads = await download_session_content(session, "downloads")
+    print(f"Downloaded content: {downloads}")
+
+asyncio.run(main())
+```
 
 ## Installation
 
-You can install the package using `uv`:
+To install `wwdctools` for use, run the following command in your terminal:
 
 ```bash
-uv add wwdctools
+uv pip install wwdctools
 ```
+This will download and install `wwdctools` and its dependencies from PyPI.
 
 ## Requirements
 
 - Python 3.13 or higher
 
-## Usage
+## Advanced transcript handling
 
-### Downloading Content
+This section details how to work with transcripts using both the CLI and Python API.
 
-You can download videos, transcripts, and sample code using a single command:
+### CLI usage
 
-```bash
-# Download all content (video, transcript, sample code) from a session
-wwdctools download https://developer.apple.com/videos/play/wwdc2024/10144
-
-# Specify output directory
-wwdctools download https://developer.apple.com/videos/play/wwdc2024/10144 --output downloads/
-```
-
-#### Use the Python API
-
-```python
-import asyncio
-from wwdctools import fetch_session_data, download_session_content
-
-async def download_wwdc():
-    # Fetch session data
-    session = await fetch_session_data("https://developer.apple.com/videos/play/wwdc2024/10144")
-
-    # Download all content (returns a dict of downloaded file paths)
-    downloads = await download_session_content(session, "downloads")
-
-    # Access downloaded files
-    video_path = downloads.get("video")
-    transcript_path = downloads.get("transcript")
-    sample_code_path = downloads.get("sample_code")
-    code_samples_dir = downloads.get("code_samples")
-    webvtt_dir = downloads.get("webvtt")
-
-# Run the async function
-asyncio.run(download_wwdc())
-```
-
-### Working with Transcripts
-
-#### Display transcript in terminal
-
+Display the transcript directly in your terminal:
 ```bash
 wwdctools transcript https://developer.apple.com/videos/play/wwdc2024/10144
 ```
 
-#### Save transcript to a file
-
+Save the transcript to a file:
 ```bash
 wwdctools transcript https://developer.apple.com/videos/play/wwdc2024/10144 --output transcript.txt
 ```
 
-#### Fetch multiple transcripts and save to a directory
-
+Fetch multiple transcripts and save them to a directory:
 ```bash
 wwdctools transcript https://developer.apple.com/videos/play/wwdc2024/10144 https://developer.apple.com/videos/play/wwdc2024/10145 --output transcripts/
 ```
 
-#### Fetch multiple transcripts and combine them into a single file
-
+Fetch multiple transcripts and combine them into a single file:
 ```bash
 wwdctools transcript https://developer.apple.com/videos/play/wwdc2024/10144 https://developer.apple.com/videos/play/wwdc2024/10145 --output combined.txt --combine
 ```
 
-#### Save transcript in different formats
-
+Save the transcript in different formats (e.g., Markdown or JSON):
 ```bash
 wwdctools transcript https://developer.apple.com/videos/play/wwdc2024/10144 --output transcript.md --format md
 wwdctools transcript https://developer.apple.com/videos/play/wwdc2024/10144 --output transcript.json --format json
 ```
 
-#### Using Python API
-
+### Python API usage
 ```python
 import asyncio
 from wwdctools import fetch_session_data, fetch_transcript
@@ -113,23 +96,31 @@ transcript = asyncio.run(get_transcript("https://developer.apple.com/videos/play
 print(transcript)
 ```
 
-### Working with Code Samples
+## Advanced Code Extraction
 
-Code samples can be extracted and saved in various formats:
+Extract code samples from sessions and save them in various formats.
 
+### CLI usage
+
+Extract code samples from a session and print to console:
 ```bash
 # Extract code samples from a session
 wwdctools code https://developer.apple.com/videos/play/wwdc2024/10144
+```
 
+Save code samples to a directory:
+```bash
 # Save code samples to a directory
 wwdctools code https://developer.apple.com/videos/play/wwdc2024/10144 --output code_samples/
+```
 
+Choose the output format (e.g., Markdown or JSON):
+```bash
 # Choose output format (txt/md/json)
 wwdctools code https://developer.apple.com/videos/play/wwdc2024/10144 --output samples.md --format md
 ```
 
-#### Using Python API
-
+### Python API usage
 ```python
 import asyncio
 from wwdctools import fetch_session_data
@@ -152,23 +143,31 @@ async def extract_code():
 asyncio.run(extract_code())
 ```
 
-### Working with WebVTT Subtitles
+## Advanced Subtitle Management
 
-You can download WebVTT subtitle files from WWDC session pages:
+Download WebVTT subtitle files from WWDC session pages.
 
+### CLI usage
+
+Display WebVTT information in your terminal:
 ```bash
 # Display WebVTT information in terminal
 wwdctools webvtt https://developer.apple.com/videos/play/wwdc2024/10144
+```
 
+Save WebVTT files to a directory:
+```bash
 # Save WebVTT files to a directory
 wwdctools webvtt https://developer.apple.com/videos/play/wwdc2024/10144 --output subtitles/
+```
 
+Combine all WebVTT files into a single file:
+```bash
 # Combine all WebVTT files into a single file
 wwdctools webvtt https://developer.apple.com/videos/play/wwdc2024/10144 --output combined.webvtt --combine
 ```
 
-#### Using Python API
-
+### Python API usage
 ```python
 import asyncio
 from wwdctools import fetch_session_data
@@ -190,24 +189,28 @@ asyncio.run(get_webvtt())
 
 ## Development
 
-### Setup Development Environment
+If you want to contribute to `wwdctools` or run it from the source code, follow these instructions to set up a development environment.
 
+### Setup development environment
 ```bash
 # Clone the repository
 git clone https://github.com/tattn/wwdctools.git
 cd wwdctools
 
-# Install development dependencies with uv (not pip)
-uv add --dev .[dev]
+# Install development dependencies, including wwdctools in editable mode
+uv pip install -e .[dev]
+# Alternatively, if you have a uv.lock file and want to sync exactly:
+# uv sync --dev
 ```
 
-### Testing and Code Quality
+### Testing and code quality
+All testing and quality checks are run using `uv run`. These commands assume you are in the root of the project directory.
 
 ```bash
 # Run tests (uses pytest with anyio)
 uv run --frozen pytest
 
-# If pytest fails to find anyio mark
+# If pytest fails to find anyio mark (e.g., in some CI environments)
 PYTEST_DISABLE_PLUGIN_AUTOLOAD="" uv run --frozen pytest
 
 # Format code
