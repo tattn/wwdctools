@@ -127,7 +127,7 @@ wwdctools code https://developer.apple.com/videos/play/wwdc2024/10144
 Save code samples to a directory:
 
 ```bash
-wwdctools code https://developer.apple.com/videos/play/wwdc2024/10144 --output code_samples/
+wwdctools code https://developer.apple.com/videos/play/wwdc2024/10144 --output sample_code/
 ```
 
 Choose the output format (e.g., Markdown or JSON):
@@ -148,14 +148,10 @@ async def extract_code():
     session = await fetch_session_data("https://developer.apple.com/videos/play/wwdc2024/10144")
 
     # Access code samples
-    for sample in session.code_samples:
+    for sample in session.sample_code:
         print(f"Title: {sample.title}")
         print(f"Timestamp: {sample.timestamp}")
         print(f"Code:\n{sample.code}\n")
-
-    # Access downloadable sample code URL if available
-    if session.sample_code_url:
-        print(f"Sample code download: {session.sample_code_url}")
 
 # Run the async function
 asyncio.run(extract_code())

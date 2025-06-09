@@ -34,7 +34,7 @@ async def _download_video(
     os.makedirs(session_dir, exist_ok=True)
 
     # Generate filename from quality
-    filename = f"{quality}.mp4"
+    filename = f"wwdc{session.year}-{session.id}_{quality}.mp4"
     filepath = os.path.join(session_dir, filename)
 
     # Check if file already exists
@@ -156,44 +156,7 @@ async def _download_webvtt(
     return webvtt_dir
 
 
-async def _download_sample_code(
-    session: WWDCSession,
-    output_dir: str,
-) -> str | None:
-    """Download sample code for a WWDC session.
-
-    Args:
-        session: The WWDCSession object containing sample code URL.
-        output_dir: Directory to save sample code.
-
-    Returns:
-        The filepath of the downloaded sample code, or None if no sample code was
-        downloaded.
-    """
-    if not session.sample_code_url:
-        return None
-
-    # Create session directory
-    session_dir = os.path.join(output_dir, f"wwdc_{session.year}_{session.id}")
-    os.makedirs(session_dir, exist_ok=True)
-
-    # Extract filename from URL or generate one
-    filepath = os.path.join(session_dir, "sample_code.zip")
-
-    logger.info(f"Downloading sample code from {session.sample_code_url}")
-    async with httpx.AsyncClient() as client:
-        # Get the response directly without using stream
-        response = await client.get(session.sample_code_url)
-        response.raise_for_status()
-
-        with open(filepath, "wb") as f:
-            f.write(response.content)
-
-    logger.info(f"Sample code saved to {filepath}")
-    return filepath
-
-
-def _save_code_samples(
+def _save_sample_code(
     session: WWDCSession,
     output_dir: str,
 ) -> str | None:
@@ -289,15 +252,10 @@ async def download_session_content(
     if webvtt_dir:
         downloaded_files["webvtt"] = webvtt_dir
 
-    # Download sample code
-    sample_code_path = await _download_sample_code(session, output_dir)
+    # Extract and save code samples
+    sample_code_path = _save_sample_code(session, output_dir)
     if sample_code_path:
         downloaded_files["sample_code"] = sample_code_path
-
-    # Extract and save code samples
-    code_samples_path = _save_code_samples(session, output_dir)
-    if code_samples_path:
-        downloaded_files["code_samples"] = code_samples_path
 
     if not downloaded_files:
         raise ValueError(f"No content available to download for session {session.id}")

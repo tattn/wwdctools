@@ -43,7 +43,6 @@ async def test_download_session_content_video_only():
                 url="https://developer.apple.com/videos/play/wwdc2024/123",
                 video_id="1/test",  # Now using video_id instead of video_url
                 transcript_content=None,
-                sample_code_url=None,
             )
 
             # Download content
@@ -65,9 +64,16 @@ async def test_download_session_content_video_only():
 
         finally:
             # Clean up test files
-            for file in output_dir.glob("*"):
-                file.unlink()
-            if output_dir.exists():
+            # First remove files in the session directory
+            session_dir = output_dir / f"wwdc_{session.year}_{session.id}"
+            if session_dir.exists():
+                for file in session_dir.glob("*"):
+                    if file.is_file():
+                        file.unlink()
+                # Remove the directory itself
+                session_dir.rmdir()
+            # Remove the output directory if it exists and is empty
+            if output_dir.exists() and not any(output_dir.iterdir()):
                 output_dir.rmdir()
 
 
@@ -83,7 +89,6 @@ async def test_download_session_content_no_content():
         url="https://developer.apple.com/videos/play/wwdc2024/123",
         video_id=None,
         transcript_content=None,
-        sample_code_url=None,
     )
 
     # Verify that ValueError is raised
@@ -145,7 +150,6 @@ async def test_download_session_content_no_content(  # noqa: F811
         url="https://developer.apple.com/videos/play/wwdc2024/123",
         video_id=None,
         transcript_content=None,
-        sample_code_url=None,
     )
 
     # Verify that ValueError is raised

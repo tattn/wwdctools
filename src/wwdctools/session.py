@@ -144,24 +144,6 @@ def _extract_transcript(soup: BeautifulSoup) -> str | None:
     return re.sub(r"\.", ".\n", text)
 
 
-def _extract_sample_code_url(soup: BeautifulSoup, base_url: str) -> str | None:
-    """Extract sample code URL from the soup object.
-
-    Args:
-        soup: The BeautifulSoup object containing the parsed HTML.
-        base_url: The base URL for resolving relative URLs.
-
-    Returns:
-        The sample code URL, or None if not available.
-    """
-    sample_code_elem = soup.select_one("a[href*='sample-code']")
-    if sample_code_elem and hasattr(sample_code_elem, "get"):
-        href = sample_code_elem.get("href")  # type: ignore
-        if href and isinstance(href, str):
-            return urljoin(base_url, href)
-    return None
-
-
 def _extract_sample_code_time(prev_p: Tag) -> tuple[float, str]:
     """Extract timestamp and title from a paragraph tag.
 
@@ -374,7 +356,6 @@ async def fetch_session_data(url: str) -> WWDCSession:
     title, description = _extract_basic_metadata(soup)
     video_id, hls_url = _extract_video_metadata(soup)
     transcript_content = _extract_transcript(soup)
-    sample_code_url = _extract_sample_code_url(soup, url)
     sample_codes = _extract_sample_codes(soup)
     subtitles_url = await _extract_subtitles_url(hls_url)
     webvtt_urls = await _extract_webvtt_urls(subtitles_url)
@@ -388,7 +369,6 @@ async def fetch_session_data(url: str) -> WWDCSession:
         video_id=video_id,
         hls_url=hls_url,
         transcript_content=transcript_content,
-        sample_code_url=sample_code_url,
         sample_codes=sample_codes,
         subtitles_url=subtitles_url,
         webvtt_urls=webvtt_urls,

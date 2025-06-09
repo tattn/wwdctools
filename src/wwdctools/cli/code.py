@@ -65,7 +65,7 @@ def code(
     logger.debug(f"Found {len(session.sample_codes)} code samples")
 
     # Format the code samples
-    formatted_samples = _format_code_samples(session, format)
+    formatted_samples = _format_sample_code(session, format)
 
     # Output the code samples
     if output:
@@ -89,7 +89,7 @@ def code(
         console.print("\n[dim](Use --output to save the code samples)[/dim]")
 
 
-def _format_code_samples(session: WWDCSession, format: str) -> str:
+def _format_sample_code(session: WWDCSession, format: str) -> str:
     """Format code samples based on the specified output format.
 
     Args:

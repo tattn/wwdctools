@@ -66,10 +66,6 @@ async def test_fetch_session_data(mock_client_class: Any) -> None:
     assert session.description == "Learn how to build great apps for Apple platforms."
     assert session.year == test_year
     assert session.url == "https://developer.apple.com/videos/play/wwdc2023/123"
-    assert (
-        session.sample_code_url
-        == "https://developer.apple.com/downloads/sample-code/building-great-apps.zip"
-    )
 
     # Verify mocks were called correctly
     mock_client.get.assert_called_once_with(
@@ -188,10 +184,6 @@ async def test_fetch_session_data_with_video_id(mock_client_class: Any) -> None:
     assert (
         session.generate_video_url("sd")
         == f"https://devstreaming-cdn.apple.com/videos/wwdc/{test_year}/10144/4/8A69C683-3259-454B-9F94-5BBE98999A1B/downloads/wwdc{test_year}-10144_sd.mp4?dl=1"
-    )
-    assert (
-        session.sample_code_url
-        == "https://developer.apple.com/downloads/sample-code/building-great-apps.zip"
     )
     assert (
         session.subtitles_url

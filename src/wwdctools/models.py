@@ -27,7 +27,6 @@ class WWDCSession(BaseModel):
     webvtt_urls: list[str] = []  # URLs to WebVTT subtitle files
     webvtt_content: list[str] = []  # Content of WebVTT subtitle files
     transcript_content: str | None = None
-    sample_code_url: str | None = None
     sample_codes: list[WWDCSampleCode] = []
 
     def generate_video_url(self, quality: str = "hd") -> str | None:
