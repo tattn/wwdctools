@@ -57,6 +57,14 @@ async def main():
 asyncio.run(main())
 ```
 
+**Note:** `wwdctools` supports localized WWDC URLs such as:
+
+- `https://developer.apple.com/jp/videos/play/wwdc2025/102/`
+- `https://developer.apple.com/kr/videos/play/wwdc2025/102/`
+- and other language codes in the URL path.
+
+When using a localized URL, the language code from the URL (e.g., `jp` for Japanese) will automatically be used for subtitles and WebVTT content unless you explicitly specify a different language with the `--language` option.
+
 ## Advanced transcript handling
 
 This section details how to work with transcripts using both the CLI and Python API.

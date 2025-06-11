@@ -11,29 +11,36 @@ from .logger import logger
 from .models import WWDCSampleCode, WWDCSession
 
 
-def _validate_session_url(url: str) -> tuple[int, str]:
-    """Validate a WWDC session URL and extract year and session ID.
+def _validate_session_url(url: str) -> tuple[int, str, str | None]:
+    """Validate a WWDC session URL and extract year, session ID, and language code.
 
     Args:
         url: The URL of the WWDC session page.
 
     Returns:
-        A tuple of (year, session_id).
+        A tuple of (year, session_id, language_code).
+        language_code will be None if no language code is present in the URL.
 
     Raises:
         ValueError: If the URL is not a valid WWDC session URL.
     """
     logger.debug(f"Validating URL: {url}")
-    url_pattern = r"https?://developer\.apple\.com/videos/play/wwdc(\d{4})/(\d+)"
+    # Support URLs with language prefixes (e.g., /jp/, /kr/, etc.)
+    url_pattern = (
+        r"https?://developer\.apple\.com/(?:([a-z]{2})/)?videos/play/wwdc(\d{4})/(\d+)"
+    )
     match = re.match(url_pattern, url)
     if not match:
         logger.error(f"Invalid URL format: {url}")
         raise ValueError(f"Invalid WWDC session URL: {url}")
 
-    year = int(match.group(1))
-    session_id = match.group(2)
-    logger.debug(f"Extracted year={year}, session_id={session_id}")
-    return year, session_id
+    lang_code = match.group(1)
+    year = int(match.group(2))
+    session_id = match.group(3)
+    logger.debug(
+        f"Extracted year={year}, session_id={session_id}, language_code={lang_code}"
+    )
+    return year, session_id, lang_code
 
 
 async def _fetch_page_content(url: str) -> BeautifulSoup:
@@ -377,6 +384,9 @@ async def fetch_session_data(url: str, language: str = "en") -> WWDCSession:
     Args:
         url: The URL of the WWDC session page.
         language: The language code for subtitles (default: "en").
+                 If the URL contains a language code (e.g., 'jp' in
+                 'https://developer.apple.com/jp/videos/play/...'),
+                 that language will be used by default unless overridden here.
 
     Returns:
         A WWDCSession object containing the session metadata and content links.
@@ -385,7 +395,17 @@ async def fetch_session_data(url: str, language: str = "en") -> WWDCSession:
         ValueError: If the URL is not a valid WWDC session URL.
         httpx.HTTPError: If there's an error fetching the page.
     """
-    year, session_id = _validate_session_url(url)
+    year, session_id, url_lang_code = _validate_session_url(url)
+
+    # Use language from URL if available and not explicitly specified
+    if url_lang_code and language == "en":
+        language_map = {
+            "jp": "ja",
+            "kr": "ko",
+        }
+        language = language_map.get(url_lang_code, url_lang_code)
+        logger.debug(f"Using language code from URL: {language}")
+
     soup = await _fetch_page_content(url)
 
     title, description = _extract_basic_metadata(soup)
