@@ -175,6 +175,14 @@ Save WebVTT files to a directory:
 wwdctools webvtt https://developer.apple.com/videos/play/wwdc2024/10144 --output subtitles/
 ```
 
+Specify a language for subtitles (falls back to English if unavailable):
+
+```bash
+wwdctools webvtt https://developer.apple.com/videos/play/wwdc2024/10144 --language ja
+```
+
+Available language codes include: `en` (English), `ja` (Japanese), `zh` (Chinese), `ko` (Korean), `fr` (French), `es` (Spanish), `de` (German), and `pt-BR` (Brazilian Portuguese). Language availability may vary by session.
+
 Combine all WebVTT files into a single file:
 
 ```bash
@@ -188,8 +196,11 @@ import asyncio
 from wwdctools import fetch_session_data
 
 async def get_webvtt():
-    # Fetch session data
-    session = await fetch_session_data("https://developer.apple.com/videos/play/wwdc2024/10144")
+    # Fetch session data (with language preference, defaults to English)
+    session = await fetch_session_data(
+        "https://developer.apple.com/videos/play/wwdc2024/10144",
+        language="ja"  # Optional: specify language code (e.g., ja, zh, fr)
+    )
 
     # Fetch WebVTT content
     webvtt_content = await session.fetch_webvtt()

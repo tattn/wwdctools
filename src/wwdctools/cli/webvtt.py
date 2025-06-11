@@ -28,6 +28,16 @@ from .utils import console, handle_command_errors, logger, print_panel
     is_flag=True,
     help="Combine all WebVTT files into a single file.",
 )
+@click.option(
+    "--language",
+    "-l",
+    type=str,
+    default="en",
+    help=(
+        "Language code for subtitles (e.g., en, ja, zh). "
+        "Falls back to English if requested language is unavailable."
+    ),
+)
 @click.pass_context
 @handle_command_errors
 def webvtt(
@@ -35,18 +45,19 @@ def webvtt(
     url: str,
     output: str | None = None,
     combine: bool = False,
+    language: str = "en",
 ) -> None:
     """Download WebVTT subtitle files from a WWDC session URL.
 
     URL: The URL of the WWDC session page.
     """
-    logger.debug(f"Starting WebVTT download from {url}")
+    logger.debug(f"Starting WebVTT download from {url} with language: {language}")
 
     print_panel(f"[bold]Downloading WebVTT subtitles from[/bold] {url}")
 
     # Fetch session data
     logger.debug("Fetching session data...")
-    session = asyncio.run(fetch_session_data(url))
+    session = asyncio.run(fetch_session_data(url, language))
     logger.debug(f"Session data fetched: ID={session.id}, Title={session.title}")
 
     # Check if WebVTT URLs are available

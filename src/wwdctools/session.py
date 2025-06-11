@@ -208,14 +208,18 @@ def _extract_sample_codes(soup: BeautifulSoup) -> list[WWDCSampleCode]:
     return sample_codes
 
 
-async def _extract_subtitles_url(hls_url: str | None) -> str | None:
-    """Extract the English subtitles URL from the HLS manifest.
+async def _extract_subtitles_url(
+    hls_url: str | None, language: str = "en"
+) -> str | None:
+    """Extract the subtitles URL for the specified language from the HLS manifest.
 
     Args:
         hls_url: The URL to the HLS manifest file.
+        language: The language code to extract subtitles for (default: "en").
 
     Returns:
-        The URL to the English subtitles, or None if not available.
+        The URL to the subtitles for the requested language (or English as fallback),
+        or None if not available.
     """
     if not hls_url:
         logger.debug("No HLS URL provided, skipping subtitles extraction")
@@ -228,19 +232,21 @@ async def _extract_subtitles_url(hls_url: str | None) -> str | None:
             response.raise_for_status()
 
             manifest_content = response.text
-            logger.debug("Parsing HLS manifest for subtitles")
+            logger.debug(f"Parsing HLS manifest for subtitles in language: {language}")
 
-            # Regular expression to find the English subtitles entry
-            # Looking for: #EXT-X-MEDIA:TYPE=SUBTITLES,.*LANGUAGE="en",.*URI="(.+?)"
-            subtitles_pattern = re.compile(
-                r'#EXT-X-MEDIA:.*TYPE=SUBTITLES,.*LANGUAGE="en".*URI="(.+?)"',
+            # First try to find the requested language
+            # Looking for subtitles in the specified language
+            requested_subtitles_pattern = re.compile(
+                rf'#EXT-X-MEDIA:.*TYPE=SUBTITLES,.*LANGUAGE="{language}".*URI="(.+?)"',
                 re.IGNORECASE,
             )
 
-            match = subtitles_pattern.search(manifest_content)
+            match = requested_subtitles_pattern.search(manifest_content)
             if match:
                 subtitles_uri = match.group(1)
-                logger.debug(f"Found English subtitles URI: {subtitles_uri}")
+                logger.debug(
+                    f"Found subtitles URI for language {language}: {subtitles_uri}"
+                )
 
                 # Construct the full URL by joining with the base HLS URL
                 base_url = hls_url.rsplit("/", 1)[0] + "/"
@@ -248,7 +254,35 @@ async def _extract_subtitles_url(hls_url: str | None) -> str | None:
                 logger.debug(f"Constructed subtitles URL: {full_subtitles_url}")
                 return full_subtitles_url
 
-            logger.debug("No English subtitles found in the manifest")
+            # If requested language not found, fall back to English
+            if language != "en":
+                logger.debug(
+                    f"No subtitles found for language: {language}, "
+                    f"falling back to English"
+                )
+                english_pattern = re.compile(
+                    r'#EXT-X-MEDIA:.*TYPE=SUBTITLES,.*LANGUAGE="en".*URI="(.+?)"',
+                    re.IGNORECASE,
+                )
+
+                match = english_pattern.search(manifest_content)
+                if match:
+                    subtitles_uri = match.group(1)
+                    logger.debug(
+                        f"Found English subtitles URI as fallback: {subtitles_uri}"
+                    )
+
+                    # Construct the full URL by joining with the base HLS URL
+                    base_url = hls_url.rsplit("/", 1)[0] + "/"
+                    full_subtitles_url = urljoin(base_url, subtitles_uri)
+                    logger.debug(
+                        f"Constructed fallback subtitles URL: {full_subtitles_url}"
+                    )
+                    return full_subtitles_url
+
+            logger.debug(
+                f"No subtitles found for language: {language} (or English fallback)"
+            )
             return None
     except httpx.HTTPError as e:
         logger.error(f"Error fetching HLS manifest: {e}")
@@ -337,11 +371,12 @@ async def fetch_webvtt_from_urls(webvtt_urls: list[str]) -> list[str]:
         return []
 
 
-async def fetch_session_data(url: str) -> WWDCSession:
+async def fetch_session_data(url: str, language: str = "en") -> WWDCSession:
     """Fetch session data from a WWDC session URL.
 
     Args:
         url: The URL of the WWDC session page.
+        language: The language code for subtitles (default: "en").
 
     Returns:
         A WWDCSession object containing the session metadata and content links.
@@ -357,7 +392,7 @@ async def fetch_session_data(url: str) -> WWDCSession:
     video_id, hls_url = _extract_video_metadata(soup)
     transcript_content = _extract_transcript(soup)
     sample_codes = _extract_sample_codes(soup)
-    subtitles_url = await _extract_subtitles_url(hls_url)
+    subtitles_url = await _extract_subtitles_url(hls_url, language)
     webvtt_urls = await _extract_webvtt_urls(subtitles_url)
 
     return WWDCSession(
