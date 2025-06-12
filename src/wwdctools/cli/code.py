@@ -129,8 +129,12 @@ def _format_sample_code(session: WWDCSession, format: str) -> str:
             seconds = int(sample.time) % 60
             time_str = f"{minutes:02d}:{seconds:02d}"
 
+            # Create a timestamp link to the video
+            timestamp_seconds = int(sample.time)
+            timestamp_link = f"{session.url}?time={timestamp_seconds}"
+
             lines.append(f"## {sample.title}")
-            lines.append(f"Time: {time_str}\n")
+            lines.append(f"Time: [{time_str}]({timestamp_link})\n")
             lines.append("```")
             lines.append(sample.code)
             lines.append("```\n")
@@ -145,8 +149,12 @@ def _format_sample_code(session: WWDCSession, format: str) -> str:
             seconds = int(sample.time) % 60
             time_str = f"{minutes:02d}:{seconds:02d}"
 
+            # Create a timestamp link to the video
+            timestamp_seconds = int(sample.time)
+            timestamp_link = f"{session.url}?time={timestamp_seconds}"
+
             lines.append(f"=== {sample.title} ===")
-            lines.append(f"Time: {time_str}\n")
+            lines.append(f"Time: {time_str} ({timestamp_link})\n")
             lines.append(sample.code)
             lines.append("\n" + "-" * 80 + "\n")
 
