@@ -1,13 +1,13 @@
 """Code command for WWDC Tools CLI."""
 
 import asyncio
-import json
 import os
 import sys
 
 import click
 
-from wwdctools.session import WWDCSession, fetch_session_data
+from wwdctools.session import fetch_session_data
+from wwdctools.utils import format_sample_code
 
 from .utils import console, handle_command_errors, logger, print_panel
 
@@ -65,7 +65,7 @@ def code(
     logger.debug(f"Found {len(session.sample_codes)} code samples")
 
     # Format the code samples
-    formatted_samples = _format_sample_code(session, format)
+    formatted_samples = format_sample_code(session, format)
 
     # Output the code samples
     if output:
@@ -87,75 +87,3 @@ def code(
         console.print("\n[bold]Code Samples:[/bold]\n")
         console.print(formatted_samples)
         console.print("\n[dim](Use --output to save the code samples)[/dim]")
-
-
-def _format_sample_code(session: WWDCSession, format: str) -> str:
-    """Format code samples based on the specified output format.
-
-    Args:
-        session: The session metadata with code samples.
-        format: The output format (txt, md, json).
-
-    Returns:
-        The formatted code samples.
-    """
-    if format == "json":
-        return json.dumps(
-            {
-                "id": session.id,
-                "title": session.title,
-                "year": session.year,
-                "samples": [
-                    {
-                        "time": sample.time,
-                        "title": sample.title,
-                        "code": sample.code,
-                    }
-                    for sample in session.sample_codes
-                ],
-            },
-            indent=2,
-        )
-
-    lines = []
-
-    if format == "md":
-        lines.append(f"# Code Samples from {session.title}")
-        lines.append(f"WWDC {session.year} - Session {session.id}\n")
-
-        for sample in session.sample_codes:
-            # Format time as MM:SS
-            minutes = int(sample.time) // 60
-            seconds = int(sample.time) % 60
-            time_str = f"{minutes:02d}:{seconds:02d}"
-
-            # Create a timestamp link to the video
-            timestamp_seconds = int(sample.time)
-            timestamp_link = f"{session.url}?time={timestamp_seconds}"
-
-            lines.append(f"## {sample.title}")
-            lines.append(f"Time: [{time_str}]({timestamp_link})\n")
-            lines.append("```")
-            lines.append(sample.code)
-            lines.append("```\n")
-    else:
-        # txt format
-        lines.append(f"Code Samples from {session.title}")
-        lines.append(f"WWDC {session.year} - Session {session.id}\n")
-
-        for sample in session.sample_codes:
-            # Format time as MM:SS
-            minutes = int(sample.time) // 60
-            seconds = int(sample.time) % 60
-            time_str = f"{minutes:02d}:{seconds:02d}"
-
-            # Create a timestamp link to the video
-            timestamp_seconds = int(sample.time)
-            timestamp_link = f"{session.url}?time={timestamp_seconds}"
-
-            lines.append(f"=== {sample.title} ===")
-            lines.append(f"Time: {time_str} ({timestamp_link})\n")
-            lines.append(sample.code)
-            lines.append("\n" + "-" * 80 + "\n")
-
-    return "\n".join(lines)
