@@ -3,10 +3,12 @@
 import asyncio
 import os
 import sys
+import tempfile
 
 import click
 
 from wwdctools.session import WWDCSession, fetch_session_data
+from wwdctools.webvtt_utils import combine_webvtt_files
 
 from .utils import console, handle_command_errors, logger, print_panel
 
@@ -119,12 +121,18 @@ def _save_webvtt_files(
         # Combine all WebVTT files into a single file
         combined_filepath = output
 
-        with open(combined_filepath, "w", encoding="utf-8") as f:
+        # First, save individual files to a temporary directory
+        with tempfile.TemporaryDirectory() as temp_dir:
+            # Save each WebVTT content to a temporary file
+            temp_files = []
             for i, content in enumerate(webvtt_content):
-                if i > 0:
-                    f.write("\n\n" + ("-" * 80) + "\n\n")
-                f.write(f"# Sequence {i}\n\n")
-                f.write(content)
+                temp_file = os.path.join(temp_dir, f"sequence_{i}.webvtt")
+                with open(temp_file, "w", encoding="utf-8") as f:
+                    f.write(content)
+                temp_files.append(temp_file)
+
+            # Process and combine all WebVTT files
+            combine_webvtt_files(temp_files, combined_filepath)
 
         console.print(
             f"[bold green]Combined WebVTT saved to[/bold green] {combined_filepath}"
